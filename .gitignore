@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# R session / project files
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Downloaded NOAA source files (re-created by the pipeline)
+data/
+
+# Generated database and outputs
+output/
+tables/
+figures/
+
+# Temporary files
+*.tmp
+*.log
