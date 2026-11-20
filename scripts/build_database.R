@@ -26,14 +26,36 @@ dir.create("data", showWarnings = FALSE)
 # Create folder to store the SQLite database
 dir.create("output", showWarnings = FALSE)
 
-# Define years and NOAA file URLs
+# Find the newest available NOAA detail file for each year
 years <- 2016:2025
-base_url <- "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles"
-correction_tag <- function(y) {
-  if (y == 2024) "c20260421" else "c20260323"
-}
-urls <- sprintf("%s/StormEvents_details-ftp_v1.0_d%d_%s.csv.gz", base_url, years, vapply(years, correction_tag, character(1)))
-local_files <- file.path("data", basename(urls))
+base_url <- "https://www.ncei.noaa.gov/pub/data/swdi/stormevents/csvfiles/"
+
+listing <- paste(readLines(base_url, warn = FALSE), collapse = "\n")
+
+pattern <- paste0(
+  "StormEvents_details-ftp_v1\\.0_d[0-9]{4}",
+  "_c[0-9]{8}\\.csv\\.gz"
+)
+
+available_files <- unique(
+  regmatches(listing, gregexpr(pattern, listing))[[1]]
+)
+
+filenames <- vapply(years, function(y) {
+  matches <- available_files[
+    grepl(sprintf("_d%d_c", y), available_files)
+  ]
+
+  if (length(matches) == 0L) {
+    stop("No NOAA detail file found for year ", y)
+  }
+
+  # YYYYMMDD dates sort chronologically
+  sort(matches, decreasing = TRUE)[1]
+}, character(1))
+
+urls <- paste0(base_url, filenames)
+local_files <- file.path("data", filenames)
 
 # Download files
 for (i in seq_along(urls)) {
